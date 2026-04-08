@@ -17,7 +17,7 @@ interface JoinGameModalProps {
 
 export function JoinGameModal({ isOpen, onClose, onJoined, onLeft, existingGameCode }: JoinGameModalProps) {
     const router = useRouter();
-    const [code, setCode] = useState<string[]>(['', '', '', '']);
+    const [code, setCode] = useState<string[]>(['', '', '']);
     const [isConnecting, setIsConnecting] = useState(false);
     const [isJoined, setIsJoined] = useState(false);
     const [isClosed, setIsClosed] = useState(false);
@@ -26,14 +26,14 @@ export function JoinGameModal({ isOpen, onClose, onJoined, onLeft, existingGameC
     const socketRef = useRef<Socket | null>(null);
     const joinTimeoutRef = useRef<number | null>(null);
 
-    const gameKeys = useMemo(() => PASSWORD_KEYS.filter(k => k !== 'E'), []);
+    const gameKeys = useMemo(() => PASSWORD_KEYS, []);
     const isComplete = code.every(c => c !== '');
     const gameCode = code.join('');
 
     useEffect(() => {
         if (!isOpen) return;
         // reset on open
-        setCode(existingGameCode ? existingGameCode.split('') : ['', '', '', '']);
+        setCode(existingGameCode ? existingGameCode.split('') : ['', '', '']);
         setIsConnecting(false);
         setIsJoined(Boolean(existingGameCode));
         setIsClosed(false);
@@ -80,8 +80,8 @@ export function JoinGameModal({ isOpen, onClose, onJoined, onLeft, existingGameC
     const handleJoin = async () => {
         setError(null);
         const codeToUse = existingGameCode || gameCode;
-        if (!codeToUse || codeToUse.length !== 4 || (existingGameCode ? false : !isComplete)) {
-            setError('Molimo unesite 4 emojia za kod igre');
+        if (!codeToUse || codeToUse.length !== 3 || (existingGameCode ? false : !isComplete)) {
+            setError('Molimo unesite 3 emojia za kod igre');
             return;
         }
 

@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 def generateGameCode():
-    letters = "ABCD"
+    letters = "ABCDE"
 
-    code = "".join(random.choice(letters) for _ in range(4))
+    code = "".join(random.choice(letters) for _ in range(3))
     return code
 
 

@@ -20,6 +20,9 @@ interface Student {
     username: string;
     level: number;
     xp: number;
+    difficulty_do_sto: number;
+    difficulty_zbrajanje: number;
+    difficulty_mnozenje: number;
 }
 
 interface Topic {
@@ -192,8 +195,8 @@ export default function TeacherDashboard() {
             </header>
 
             {/* Main content */}
-            <div className="p-4 sm:p-8 max-w-3xl mx-auto pb-12">
-                <div className="card p-6 sm:p-8 w-full">
+            <div className="wrapper p-4 sm:p-8 max-w-3xl mx-auto pb-12">
+                <div className="card1 p-6 sm:p-8 w-full">
                     {/* Title */}
                     <div className="flex items-center gap-2 mb-4">
                         <h1 className="text-2xl font-bold">Moji razredi</h1>
@@ -294,38 +297,68 @@ export default function TeacherDashboard() {
                                     </div>
                                 ) : (
                                     <div
-                                        className="rounded-xl border p-3"
+                                        className="rounded-xl border overflow-hidden"
                                         style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}
                                     >
-                                        <div className="max-h-60 overflow-auto">
-                                            <ul className="space-y-2">
-                                                {students.map((s) => (
-                                                    <li key={s.id} className="flex items-center justify-between">
-                                                        <span className="flex items-center gap-2 font-medium">
-                                                            <i className="fa-regular fa-user text-gray-400 dark:text-gray-500" />
-                                                            {s.username}
-                                                            <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
-                                                                Level {Number.isFinite(s.level) ? s.level : 0}
-                                                            </span>
-                                                            <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-semibold">
-                                                                ⭐ {Number.isInteger(s.xp) ? s.xp : 0} XP
-                                                            </span>
-                                                        </span>
-                                                        <button
-                                                            onClick={() => void removeStudent(s.id)}
-                                                            disabled={removingStudentId === s.id}
-                                                            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-60"
-                                                            title="Izbaci učenika iz razreda"
-                                                        >
-                                                            {removingStudentId === s.id ? (
-                                                                <i className="fa-solid fa-spinner animate-spin text-red-500" />
-                                                            ) : (
-                                                                <i className="fa-solid fa-minus text-red-500" />
-                                                            )}
-                                                        </button>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                        <div className="max-h-80 overflow-auto">
+                                            <table className="w-full">
+                                                <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                                                    <tr>
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Učenik</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">XP</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">Brojevi do 100</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">Zbrajanje/Oduzimanje</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">Množenje/Dijeljenje</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">Akcije</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {students.map((s) => (
+                                                        <tr key={s.id} className="border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                                                            <td className="px-4 py-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <i className="fa-regular fa-user text-gray-400 dark:text-gray-500" />
+                                                                    <span className="font-medium">{s.username}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <span className="text-sm px-2 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-semibold">
+                                                                    ⭐ {Number.isInteger(s.xp) ? s.xp : 0}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <span className="text-sm px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
+                                                                    Level {s.difficulty_do_sto}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <span className="text-sm px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium">
+                                                                    Level {s.difficulty_zbrajanje}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <span className="text-sm px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium">
+                                                                    Level {s.difficulty_mnozenje}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <button
+                                                                    onClick={() => void removeStudent(s.id)}
+                                                                    disabled={removingStudentId === s.id}
+                                                                    className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-60"
+                                                                    title="Izbaci učenika iz razreda"
+                                                                >
+                                                                    {removingStudentId === s.id ? (
+                                                                        <i className="fa-solid fa-spinner animate-spin text-red-500" />
+                                                                    ) : (
+                                                                        <i className="fa-solid fa-minus text-red-500" />
+                                                                    )}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 )}

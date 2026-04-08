@@ -25,7 +25,7 @@ export default function LoginPage() {
     // Form state - password stores letters (A, B, C, D, E), not emojis
     // These letters form the class_code for student login
     const [username, setUsername] = useState('');
-    const [password, setPassword] = useState<string[]>(['', '', '', '']);
+    const [password, setPassword] = useState<string[]>(['', '', '']);
     const [teacherPassword, setTeacherPassword] = useState('');
     const [isTeacherMode, setIsTeacherMode] = useState(false);
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
     };
 
     const clearPassword = () => {
-        setPassword(['', '', '', '']);
+        setPassword(['', '', '']);
     };
 
     const handleClearError = () => {
@@ -90,7 +90,7 @@ export default function LoginPage() {
             }
         } else {
             if (!isPasswordComplete) {
-                setValidationError('Molimo odaberite 4 emoji za lozinku');
+                setValidationError('Molimo odaberite 3 emoji za lozinku');
                 return false;
             }
         }

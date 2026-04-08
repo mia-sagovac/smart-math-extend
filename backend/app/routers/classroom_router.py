@@ -33,9 +33,9 @@ class StudentOut(BaseModel):
 
 
 def generateClasroomCode():
-    letters = "ABCD"
+    letters = "ABCDE"
 
-    code = "".join(random.choice(letters) for _ in range(4))
+    code = "".join(random.choice(letters) for _ in range(3))
     return code
 
 
@@ -267,10 +267,14 @@ def get_classroom_students(
         raise HTTPException(status_code=403, detail="You are not teacher of this classroom.")
     
     students = (
-        db.query(User)
+        db.query(User, StudentStats)
         .join(
             user_classroom,
             user_classroom.c.user_id == User.id
+        )
+        .outerjoin(   # OUTER JOIN da dobijemo i one bez stats
+            StudentStats,
+            StudentStats.user_id == User.id
         )
         .filter(
             user_classroom.c.class_id == classroom.id,
@@ -279,7 +283,18 @@ def get_classroom_students(
         .order_by(User.username.asc())
         .all()
     )
-    return [{"id": str(s.id), "username": s.username, "level": int(s.current_difficulty)}for s in students]
+    return [
+        {
+            "id": str(s.id),
+            "username": s.username,
+            "level": int(s.current_difficulty),
+            "xp": int(stats.xp) if stats and stats.xp is not None else 0,
+            "difficulty_do_sto": int(s.difficulty_do_sto),
+            "difficulty_zbrajanje": int(s.difficulty_zbrajanje),
+            "difficulty_mnozenje": int(s.difficulty_mnozenje),
+        }
+        for s, stats in students
+    ]
 
 
 from sqlalchemy.orm import aliased
@@ -332,6 +347,9 @@ def get_students_in_classroom_by_id(
             "username": user.username,
             "level": int(user.current_difficulty),
             "xp": int(stats.xp) if stats and stats.xp is not None else 0,
+            "difficulty_do_sto": int(user.difficulty_do_sto),
+            "difficulty_zbrajanje": int(user.difficulty_zbrajanje),
+            "difficulty_mnozenje": int(user.difficulty_mnozenje),
         }
         for user, stats in students
     ]

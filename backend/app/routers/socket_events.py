@@ -30,6 +30,20 @@ from .socket_auth import authenticate_socket_with_token
 questions = {}
 
 
+def get_topic_difficulty(student: User, topic: Topic) -> int:
+    if topic is None or student is None:
+        return 3
+
+    if topic.name == "Brojevi do 100":
+        return student.difficulty_do_sto
+    if topic.name == "Množenje i dijeljenje":
+        return student.difficulty_mnozenje
+    if topic.name == "Zbrajanje i oduzimanje":
+        return student.difficulty_zbrajanje
+
+    return 3
+
+
 def _utc_now() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
 
@@ -584,21 +598,23 @@ async def startGame(sid, data):
             if not student:
                 continue
 
-            topic = (db.query(Topic).filter(Topic.id == topic_id).first())
-            user_questions = None
+            topic = db.query(Topic).filter(Topic.id == topic_id).first()
+            user_questions = []
+            topic_difficulty = get_topic_difficulty(student, topic)
 
-            if(topic.name == "Brojevi do 100"):
-                user_questions = generate_questions(db, topic_id, student.difficulty_do_sto)
-            elif (topic.name == "Množenje i dijeljenje"):
-                user_questions = generate_questions(db, topic_id, student.difficulty_mnozenje)
-            elif (topic.name == "Zbrajanje i oduzimanje"):
-                user_questions = generate_questions(db, topic_id, student.difficulty_zbrajanje)
-            
-        
+            if topic is not None:
+                if topic.name == "Brojevi do 100":
+                    user_questions = generate_questions(db, topic_id, topic_difficulty)
+                elif topic.name == "Množenje i dijeljenje":
+                    user_questions = generate_questions(db, topic_id, topic_difficulty)
+                elif topic.name == "Zbrajanje i oduzimanje":
+                    user_questions = generate_questions(db, topic_id, topic_difficulty)
 
             round_obj = Round(
                 user_id=student.id,
                 game_id=game.id,
+                topic_id=topic_id,
+                topic_difficulty=topic_difficulty,
                 question_count=len(user_questions),
                 round_index=0,
             )
@@ -742,10 +758,17 @@ async def submit_answer(sid, data):
 
         user_id = session["user_id"]
 
+        round_obj = db.query(Round).filter(Round.id == data["round_id"]).first()
+        if not round_obj:
+            await sio.emit("error", {"message": "Round not found"}, to=sid)
+            return
+
         attempt = Attempt(
             user_id=user_id,
             question_id=data["question_id"],
             round_id=data["round_id"],
+            topic_id=round_obj.topic_id,
+            topic_difficulty=round_obj.topic_difficulty or 3,
             is_correct=data["is_correct"],
             num_attempts=data.get("num_attempts", 1),
             time_spent_secs=data.get("time_spent_secs", 0),
@@ -784,15 +807,17 @@ async def fetch_new_batch(sid, data):
             await sio.emit("error", {"message": "User not found"}, to=sid)
             return
 
-        topic = (db.query(Topic).filter(Topic.id == topic_id).first())
-        user_questions = None
+        topic = db.query(Topic).filter(Topic.id == topic_id).first()
+        user_questions = []
+        topic_difficulty = get_topic_difficulty(student, topic)
             
-        if(topic.name == "Brojevi do 100"): 
-            user_questions = generate_questions(db, topic_id, student.difficulty_do_sto)
-        elif (topic.name == "Množenje i dijeljenje"):
-            user_questions = generate_questions(db, topic_id, student.difficulty_mnozenje)
-        elif (topic.name == "Zbrajanje i oduzimanje"):
-            user_questions = generate_questions(db, topic_id, student.difficulty_zbrajanje)
+        if topic is not None:
+            if topic.name == "Brojevi do 100":
+                user_questions = generate_questions(db, topic_id, topic_difficulty)
+            elif topic.name == "Množenje i dijeljenje":
+                user_questions = generate_questions(db, topic_id, topic_difficulty)
+            elif topic.name == "Zbrajanje i oduzimanje":
+                user_questions = generate_questions(db, topic_id, topic_difficulty)
         
 
         last_round = (
@@ -807,6 +832,8 @@ async def fetch_new_batch(sid, data):
         round_obj = Round(
             user_id=user_id,
             game_id=game_id,
+            topic_id=topic_id,
+            topic_difficulty=topic_difficulty,
             question_count=len(user_questions),
             round_index=next_index,
         )
@@ -873,17 +900,15 @@ async def finish_round(sid, data):
 async def finalize_round(db: Session, round_id, user_id, xp, topic_id ):
     student = db.query(User).filter((User.id == user_id)).first()
 
-    topic = (db.query(Topic).filter(Topic.id == topic_id).first())
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
 
+    round_obj = db.query(Round).filter(Round.id == round_id).one()
+    if round_obj.topic_id is None:
+        round_obj.topic_id = topic_id
+    if round_obj.topic_difficulty is None:
+        round_obj.topic_difficulty = get_topic_difficulty(student, topic)
 
-    topic_difficulty = 3
-    if(topic.name == "Brojevi do 100"):
-        topic_difficulty = student.difficulty_do_sto
-    elif (topic.name == "Množenje i dijeljenje"):
-        topic_difficulty = student.difficulty_mnozenje
-    elif (topic.name == "Zbrajanje i oduzimanje"):
-        topic_difficulty = student.difficulty_zbrajanje
-            
+    topic_difficulty = round_obj.topic_difficulty or 3
 
     stats = (
         db.query(
@@ -899,8 +924,6 @@ async def finalize_round(db: Session, round_id, user_id, xp, topic_id ):
     )
 
     total, avg_time, hints, accuracy = stats
-
-    round_obj = db.query(Round).filter(Round.id == round_id).one()
 
     round_obj.end_ts = func.now()
     round_obj.avg_time_secs = avg_time or 0
@@ -1010,11 +1033,9 @@ async def finalize_round(db: Session, round_id, user_id, xp, topic_id ):
 
     #3. if no override in round apply model recommendation
     if not is_override_in_round:
-        topic_difficulty = new_diff 
-    else:
-        topic_difficulty = topic_difficulty = student
+        topic_difficulty = new_diff
 
-    if(topic.name == "Brojevi do 100"):
+    if topic.name == "Brojevi do 100":
         student.difficulty_do_sto = topic_difficulty
     elif (topic.name == "Množenje i dijeljenje"):
         student.difficulty_mnozenje = topic_difficulty
