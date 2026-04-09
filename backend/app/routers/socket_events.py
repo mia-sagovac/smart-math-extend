@@ -604,11 +604,11 @@ async def startGame(sid, data):
 
             if topic is not None:
                 if topic.name == "Brojevi do 100":
-                    user_questions = generate_questions(db, topic_id, topic_difficulty)
+                    user_questions = generate_questions(db, topic_id, topic_difficulty, user_id=student.id, game_id=game.id)
                 elif topic.name == "Množenje i dijeljenje":
-                    user_questions = generate_questions(db, topic_id, topic_difficulty)
+                    user_questions = generate_questions(db, topic_id, topic_difficulty, user_id=student.id, game_id=game.id)
                 elif topic.name == "Zbrajanje i oduzimanje":
-                    user_questions = generate_questions(db, topic_id, topic_difficulty)
+                    user_questions = generate_questions(db, topic_id, topic_difficulty, user_id=student.id, game_id=game.id)
 
             round_obj = Round(
                 user_id=student.id,
@@ -668,7 +668,7 @@ DIFFICULTY_DISTRIBUTION = {
 }
 
 
-def generate_questions(db: Session, topic_id, current_difficulty: int, limit: int = 10):
+def generate_questions(db: Session, topic_id, current_difficulty: int, limit: int = 10, user_id=None, game_id=None):
     if not topic_id:
         return []
 
@@ -676,20 +676,34 @@ def generate_questions(db: Session, topic_id, current_difficulty: int, limit: in
     if not distribution:
         return []
 
+    # Get question IDs that the user has already answered in this game
+    excluded_question_ids = set()
+    if user_id and game_id:
+        previous_attempts = (
+            db.query(Attempt.question_id)
+            .join(Round, Round.id == Attempt.round_id)
+            .filter(
+                Attempt.user_id == user_id,
+                Round.game_id == game_id,
+                Round.topic_id == topic_id  # Only exclude questions from the same topic
+            )
+            .all()
+        )
+        excluded_question_ids = {str(row.question_id) for row in previous_attempts}
+
     selected_questions = []
     # radi samo ako imamo dovoljno pitanja u bazi
     for difficulty, count in distribution.items():
-        rows = (
-            db.query(Question)
-            .filter(
-                Question.topic_id == topic_id,
-                Question.difficulty == difficulty,
-            )
-            .order_by(func.random())
-            .limit(count)
-            .all()
+        query = db.query(Question).filter(
+            Question.topic_id == topic_id,
+            Question.difficulty == difficulty,
         )
-
+        
+        # Exclude previously answered questions
+        if excluded_question_ids:
+            query = query.filter(Question.id.notin_(excluded_question_ids))
+        
+        rows = query.order_by(func.random()).limit(count).all()
         selected_questions.extend(rows)
 
     # promijesaj da tezine pitanja ne idu redom
@@ -813,11 +827,11 @@ async def fetch_new_batch(sid, data):
             
         if topic is not None:
             if topic.name == "Brojevi do 100":
-                user_questions = generate_questions(db, topic_id, topic_difficulty)
+                user_questions = generate_questions(db, topic_id, topic_difficulty, user_id=user_id, game_id=game_id)
             elif topic.name == "Množenje i dijeljenje":
-                user_questions = generate_questions(db, topic_id, topic_difficulty)
+                user_questions = generate_questions(db, topic_id, topic_difficulty, user_id=user_id, game_id=game_id)
             elif topic.name == "Zbrajanje i oduzimanje":
-                user_questions = generate_questions(db, topic_id, topic_difficulty)
+                user_questions = generate_questions(db, topic_id, topic_difficulty, user_id=user_id, game_id=game_id)
         
 
         last_round = (
