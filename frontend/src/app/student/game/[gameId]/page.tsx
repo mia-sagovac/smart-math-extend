@@ -436,6 +436,148 @@ export default function StudentGamePage() {
         const expected = Number(expectedRaw);
         const entered = Number(answer);
         if (!Number.isFinite(expected) || !Number.isFinite(entered)) return 'Upiši broj kako bi dobio/la hint.';
+
+        // Parse the question to extract operation and numbers
+        const questionText = currentQuestion.question;
+        const match = questionText.match(/Koliko je (\d+)\s*([+\-×*÷·:/])\s*(\d+)/);
+        if (!match) {
+            // Fallback to simple hints for unrecognized question formats
+            if (entered > expected) return 'Pokušaj unijeti manji broj.';
+            if (entered < expected) return 'Pokušaj unijeti veći broj.';
+            return 'To je točan broj.';
+        }
+
+        const num1 = parseInt(match[1]);
+        let operation = match[2];
+        const num2 = parseInt(match[3]);
+
+        // Normalize division symbols
+        if (operation === '÷' || operation === '/' || operation === ':') {
+            operation = '÷';
+        }
+        // Normalize multiplication symbols
+        if (operation === '*' || operation === '·' || operation === '×') {
+            operation = '×';
+        }
+
+        // Limit hints to 3 per question
+        const hintNumber = Math.min(hintClicksThisQuestion, 3);
+
+        if (operation === '+') {
+            // Addition hints
+            const isMultiDigit = num1 >= 10 || num2 >= 10;
+            
+            if (hintNumber === 1) {
+                if (isMultiDigit) {
+                    const tens1 = Math.floor(num1 / 10) * 10;
+                    const tens2 = Math.floor(num2 / 10) * 10;
+                    return `Pokušaj prvo zbrojiti desetice: ${tens1} + ${tens2} = ${tens1 + tens2}`;
+                } else {
+                    return `Za zbrajanje malih brojeva možeš koristiti prste ili brojalicu.`;
+                }
+            } else if (hintNumber === 2) {
+                if (isMultiDigit) {
+                    const units1 = num1 % 10;
+                    const units2 = num2 % 10;
+                    return `Sada zbroji jedinice: ${units1} + ${units2} = ${units1 + units2}`;
+                } else {
+                    return `Ili jednostavno: ${num1} + ${num2} = ?`;
+                }
+            } else if (hintNumber === 3) {
+                if (isMultiDigit) {
+                    const tens1 = Math.floor(num1 / 10) * 10;
+                    const tens2 = Math.floor(num2 / 10) * 10;
+                    const units1 = num1 % 10;
+                    const units2 = num2 % 10;
+                    const tensSum = tens1 + tens2;
+                    const unitsSum = units1 + units2;
+                    return `Na kraju zbroji rezultate: ${tensSum} + ${unitsSum} = ?`;
+                } else {
+                    return `Pokušaj izračunati: ${num1} + ${num2} = ?`;
+                }
+            }
+        } else if (operation === '-') {
+            // Subtraction hints
+            const isMultiDigit = num1 >= 10 || num2 >= 10;
+            
+            if (hintNumber === 1) {
+                if (isMultiDigit) {
+                    return `Za oduzimanje većih brojeva oduzimaj od desna na lijevo.`;
+                } else {
+                    return `Za oduzimanje malih brojeva možeš koristiti prste.`;
+                }
+            } else if (hintNumber === 2) {
+                const units1 = num1 % 10;
+                const units2 = num2 % 10;
+                if (isMultiDigit) {
+                    if (units1 >= units2) {
+                        return `Za jedinice: ${units1} - ${units2} = ${units1 - units2}`;
+                    } else {
+                        return `Za jedinice: ${units1} je manji od ${units2}, posudi 1 od desetica.`;
+                    }
+                } else {
+                    return `Jednostavno: ${num1} - ${num2} = ?`;
+                }
+            } else if (hintNumber === 3) {
+                if (isMultiDigit) {
+                    return `Sada oduzmi preostale desetice i jedinice zajedno.`;
+                } else {
+                    return `Pokušaj izračunati: ${num1} - ${num2} = ?`;
+                }
+            }
+        } else if (operation === '×') {
+            // Multiplication hints
+            if (hintNumber === 1) {
+                return `Razmisli o tome kao o grupama: ${num2} grupa od ${num1} (ili obrnuto).`;
+            } else if (hintNumber === 2) {
+                if (num1 <= 5 && num2 <= 5) {
+                    // For small numbers, suggest skip counting or grouping
+                    const smaller = Math.min(num1, num2);
+                    const larger = Math.max(num1, num2);
+                    const groups = Array(smaller).fill(larger).join(' + ');
+                    return `Saberi ${smaller}x: ${groups} = ?`;
+                } else {
+                    // For larger numbers, break into tens and units
+                    const tens1 = Math.floor(num1 / 10) * 10;
+                    const units1 = num1 % 10;
+                    if (tens1 > 0 && units1 > 0) {
+                        return `Rastavimo: (${tens1} + ${units1}) × ${num2}. Prvo: ${tens1} × ${num2} = ${tens1 * num2}`;
+                    } else {
+                        return `${num1} × ${num2} je kao ${num2} ponovljeno ${num1} puta.`;
+                    }
+                }
+            } else if (hintNumber === 3) {
+                if (num1 <= 10 && num2 <= 10) {
+                    return `Prebroji sve: koliko ukupno kad skupiš sve grupe?`;
+                } else {
+                    const tens1 = Math.floor(num1 / 10) * 10;
+                    const units1 = num1 % 10;
+                    if (tens1 > 0 && units1 > 0) {
+                        const tensResult = tens1 * num2;
+                        const unitsResult = units1 * num2;
+                        return `Sada: ${units1} × ${num2} = ${unitsResult}, zatim: ${tensResult} + ${unitsResult} = ?`;
+                    } else {
+                        return `Pokušaj: ${num1} × ${num2} = ?`;
+                    }
+                }
+            }
+        } else if (operation === '÷') {
+            // Division hints
+            if (hintNumber === 1) {
+                return `Razmisli: koliko grupa od ${num2} može stati u ${num1}?`;
+            } else if (hintNumber === 2) {
+                return `Pokušaj: ${num2} × ? = ${num1}. Koji broj ide umjesto '?'?`;
+            } else if (hintNumber === 3) {
+                const result = Math.floor(num1 / num2);
+                const runningTotal = [];
+                for (let i = 1; i <= result && i <= 3; i++) {
+                    runningTotal.push(num2 * i);
+                }
+                return `Prebroji po ${num2}: ${runningTotal.join(', ')}... koliko puta trebao da dođeš do ${num1}?`;
+            }
+        }
+
+        // Fallback for other operations or if hints exceed limit
         if (entered > expected) return 'Pokušaj unijeti manji broj.';
         if (entered < expected) return 'Pokušaj unijeti veći broj.';
         return 'To je točan broj.';
@@ -546,7 +688,8 @@ export default function StudentGamePage() {
         currentQuestion?.type === 'num' &&
         !hasSubmitted &&
         attemptsThisQuestion >= 1 &&
-        lastAttemptWasWrong;
+        lastAttemptWasWrong &&
+        hintClicksThisQuestion < 3;
 
     const openHint = () => {
         if (!canShowHintButton) return;
