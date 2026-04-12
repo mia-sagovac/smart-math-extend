@@ -305,7 +305,7 @@ export default function TeacherDashboard() {
                                                 <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                                                     <tr>
                                                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Učenik</th>
-                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">XP</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">XP u prošloj rundi</th>
                                                         <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">Brojevi do 100</th>
                                                         <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">Zbrajanje/Oduzimanje</th>
                                                         <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">Množenje/Dijeljenje</th>

@@ -39,8 +39,13 @@ export default function StudentGamePage() {
         }
     };
 
+    const TARGET_DISPLAY_QUESTIONS = 5;
     const [payload, setPayload] = useState<ReceiveQuestionsPayload | null>(null);
-    const [questionIndex, setQuestionIndex] = useState<number>(0);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+    const [correctAnswersCount, setCorrectAnswersCount] = useState<number>(0);
+    const [remainingQuestionIndices, setRemainingQuestionIndices] = useState<number[]>([]);
+    const [questionSwapThreshold, setQuestionSwapThreshold] = useState<number>(() => Math.floor(Math.random() * 10) + 1);
+    const [wrongAttemptsSinceSwap, setWrongAttemptsSinceSwap] = useState<number>(0);
     const [answer, setAnswer] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
@@ -48,6 +53,7 @@ export default function StudentGamePage() {
     const [roundFeedback, setRoundFeedback] = useState<'hard' | 'ok' | 'easy' | null>(null);
     const [isLoadingNextBatch, setIsLoadingNextBatch] = useState(false);
     const [batchNumber, setBatchNumber] = useState<number>(0); // 1..3
+    const [roundIndex, setRoundIndex] = useState<number | null>(null);
     const [xp, setXp] = useState<number>(0);
     const [roundFirstTryCorrect, setRoundFirstTryCorrect] = useState<number>(0);
     const [roundXpEarned, setRoundXpEarned] = useState<number>(0);
@@ -123,7 +129,7 @@ export default function StudentGamePage() {
         return next;
     };
 
-    const currentQuestion = useMemo(() => payload?.questions?.[questionIndex] ?? null, [payload, questionIndex]);
+    const currentQuestion = useMemo(() => payload?.questions?.[currentQuestionIndex] ?? null, [payload, currentQuestionIndex]);
 
     const [questionStartedAt, setQuestionStartedAt] = useState<number>(Date.now());
     const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
@@ -193,17 +199,26 @@ export default function StudentGamePage() {
                     game_id: String(parsed.game_id),
                     topic_id: String(parsed.topic_id),
                 });
-                setQuestionIndex(0);
+                setCurrentQuestionIndex(0);
+                setCorrectAnswersCount(0);
+                setRemainingQuestionIndices(Array.isArray(parsed.questions) ? parsed.questions.map((_: any, idx: number) => idx) : []);
+                setQuestionSwapThreshold(Math.floor(Math.random() * 10) + 1);
+                setWrongAttemptsSinceSwap(0);
                 setBatchNumber(1);
                 lastRoundIdRef.current = String(parsed.round_id ?? '');
                 resetRoundXpTracking();
-                if (parsed.round_id) allocateRoundIndex(String(parsed.round_id), localStorage.getItem('auth_token'));
+                if (parsed.round_id) {
+                    const parsedIndex = allocateRoundIndex(String(parsed.round_id), localStorage.getItem('auth_token'));
+                    setRoundIndex(parsedIndex || null);
+                } else {
+                    setRoundIndex(null);
+                }
                 roundAggRef.current = {
                     answered: 0,
                     correct: 0,
                     totalTimeSecs: 0,
                     totalHints: 0,
-                    totalQuestions: Array.isArray(parsed?.questions) ? parsed.questions.length : 0,
+                    totalQuestions: Array.isArray(parsed?.questions) ? Math.min(parsed.questions.length, TARGET_DISPLAY_QUESTIONS) : 0,
                 };
             }
         } catch {
@@ -236,6 +251,12 @@ export default function StudentGamePage() {
                     return; // ignore duplicate payload
                 }
                 lastRoundIdRef.current = incomingRoundId;
+                if (incomingRoundId) {
+                    const incomingIndex = allocateRoundIndex(incomingRoundId, token);
+                    setRoundIndex(incomingIndex || null);
+                } else {
+                    setRoundIndex(null);
+                }
                 logStudentEvent(token, 'round_started', {
                     game_id: incomingGameId,
                     topic_id: String(data?.topic_id ?? ''),
@@ -243,13 +264,12 @@ export default function StudentGamePage() {
                     question_count: Array.isArray(data?.questions) ? data.questions.length : null,
                 });
                 resetRoundXpTracking();
-                if (incomingRoundId) allocateRoundIndex(incomingRoundId, token);
                 roundAggRef.current = {
                     answered: 0,
                     correct: 0,
                     totalTimeSecs: 0,
                     totalHints: 0,
-                    totalQuestions: Array.isArray(data?.questions) ? data.questions.length : 0,
+                    totalQuestions: Array.isArray(data?.questions) ? Math.min(data.questions.length, TARGET_DISPLAY_QUESTIONS) : 0,
                 };
                 try {
                     sessionStorage.setItem(`game_payload_${incomingGameId}`, JSON.stringify(data));
@@ -257,7 +277,12 @@ export default function StudentGamePage() {
                     // ignore
                 }
                 setPayload(data as ReceiveQuestionsPayload);
-                setQuestionIndex(0);
+                setCurrentQuestionIndex(0);
+                setCorrectAnswersCount(0);
+                const questions = Array.isArray(data?.questions) ? data.questions : [];
+                setRemainingQuestionIndices(questions.map((_: any, idx: number) => idx));
+                setQuestionSwapThreshold(Math.floor(Math.random() * 10) + 1);
+                setWrongAttemptsSinceSwap(0);
                 setRoundFeedback(null);
                 setIsLoadingNextBatch(false);
                 setBatchNumber((n) => (n ? n + 1 : 1));
@@ -307,7 +332,7 @@ export default function StudentGamePage() {
                     game_id: gameId,
                     round_id: String(payload?.round_id ?? ''),
                     question_id: String(currentQuestion?.question_id ?? ''),
-                    question_index: questionIndex,
+                    question_index: currentQuestionIndex,
                     batch_number: batchNumber,
                     question_difficulty: currentQuestion?.difficulty ?? null,
                     question_text: String(currentQuestion?.question ?? '').slice(0, 240),
@@ -326,7 +351,14 @@ export default function StudentGamePage() {
         }, 0);
     }, [currentQuestion]);
 
-    const isRoundComplete = Boolean(payload && questionIndex >= (payload.questions?.length ?? 0));
+    const currentRoundTotalQuestions = Math.min(
+        TARGET_DISPLAY_QUESTIONS,
+        payload?.questions?.length ?? TARGET_DISPLAY_QUESTIONS
+    );
+    const isRoundComplete = Boolean(
+        payload &&
+        (correctAnswersCount >= currentRoundTotalQuestions || remainingQuestionIndices.length === 0)
+    );
 
     // When a round finishes, notify backend to finalize the round.
     useEffect(() => {
@@ -394,6 +426,35 @@ export default function StudentGamePage() {
         return Math.max(0, Math.round(elapsed));
     };
 
+    const resetQuestionSwapState = () => {
+        setWrongAttemptsSinceSwap(0);
+        setQuestionSwapThreshold(Math.floor(Math.random() * 10) + 1);
+    };
+
+    const getNextRandomQuestionIndex = (currentIndex: number, remaining: number[]) => {
+        const candidates = remaining.filter((index) => index !== currentIndex);
+        if (candidates.length === 0) {
+            return currentIndex;
+        }
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        return candidates[randomIndex];
+    };
+
+    const advanceToNextQuestion = (currentIndex: number) => {
+        setRemainingQuestionIndices((remaining) => {
+            const nextRemaining = remaining.filter((index) => index !== currentIndex);
+            console.log('remaining questions: ', nextRemaining);
+            if (nextRemaining.length === 0) {
+                setCurrentQuestionIndex(-1);
+                return [];
+            }
+            const nextIndex = getNextRandomQuestionIndex(currentIndex, nextRemaining);
+            setCurrentQuestionIndex(nextIndex);
+            return nextRemaining;
+        });
+        resetQuestionSwapState();
+    };
+
     const buildSubmitPayload = (overrides?: Record<string, unknown>) => {
         const isCorrectNow = computeIsCorrect();
         /*const studentLevel =
@@ -404,7 +465,7 @@ export default function StudentGamePage() {
             game_id: gameId,
             round_id: String(payload?.round_id ?? ''),
             question_id: String(currentQuestion?.question_id ?? ''),
-            question_index: questionIndex,
+            question_index: currentQuestionIndex,
             question_difficulty: currentQuestion?.difficulty ?? null,
             question_text: String(currentQuestion?.question ?? '').slice(0, 240),
             // student_level: studentLevel,
@@ -607,7 +668,7 @@ export default function StudentGamePage() {
 
         // XP logic from backend
         if (isCorrect && numAttemptsToSend === 1) {
-            const totalQ = Math.max(0, Number(payload?.questions?.length ?? 0) || 0);
+            const totalQ = Math.max(0, Number(currentRoundTotalQuestions) || 0);
             if (totalQ > 0) {
                 const nextFirstTry = roundFirstTryCorrectRef.current + 1;
                 const nextRoundXp = Math.floor((nextFirstTry * 100) / totalQ);
@@ -642,9 +703,19 @@ export default function StudentGamePage() {
         setHasSubmitted(true);
         setFeedback(isCorrect ? 'Točno!' : 'Netočno!');
 
-        window.setTimeout(() => {
-            setQuestionIndex((idx) => idx + 1);
-        }, 350);
+        if (isCorrect) {
+            const nextCorrectCount = Math.min(currentRoundTotalQuestions, correctAnswersCount + 1);
+            setCorrectAnswersCount(nextCorrectCount);
+            setRemainingQuestionIndices((remaining) => remaining.filter((index) => index !== currentQuestionIndex));
+
+            if (nextCorrectCount >= currentRoundTotalQuestions) {
+                setCurrentQuestionIndex(-1);
+            } else {
+                window.setTimeout(() => {
+                    advanceToNextQuestion(currentQuestionIndex);
+                }, 350);
+            }
+        }
     };
 
     const handleAttempt = async (source: 'button' | 'enter') => {
@@ -676,9 +747,22 @@ export default function StudentGamePage() {
             setLastAttemptWasWrong(false);
             await finalizeQuestion(nextAttempts, source);
         } else {
+            const nextWrongAttempts = wrongAttemptsSinceSwap + 1;
+            setWrongAttemptsSinceSwap(nextWrongAttempts);
             setLastAttemptWasWrong(true);
-            setFeedback('Netočno, pokušaj ponovno');
 
+            if (nextWrongAttempts >= questionSwapThreshold && remainingQuestionIndices.length > 1) {
+                const nextIndex = getNextRandomQuestionIndex(currentQuestionIndex, remainingQuestionIndices);
+                if (nextIndex !== currentQuestionIndex) {
+                    setCurrentQuestionIndex(nextIndex);
+                    resetQuestionSwapState();
+                    setShowWrongOverlay(true);
+                    setTimeout(() => setShowWrongOverlay(false), 600);
+                    return;
+                }
+            }
+
+            setFeedback('Netočno, pokušaj ponovno');
             setShowWrongOverlay(true);
             setTimeout(() => setShowWrongOverlay(false), 600);
         }
@@ -863,11 +947,18 @@ export default function StudentGamePage() {
                 ) : (
                     <>
                         <div className="flex items-center justify-between mb-6 gap-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {payload?.questions?.length
-                                    ? `Pitanje ${Math.min(questionIndex + 1, payload.questions.length)} / ${payload.questions.length}`
-                                    : 'Pitanje'}
-                            </p>
+                            <div className="flex flex-col">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {payload?.questions?.length
+                                        ? `Pitanje ${Math.min(correctAnswersCount + 1, currentRoundTotalQuestions)} / ${currentRoundTotalQuestions}`
+                                        : 'Pitanje'}
+                                </p>
+                                {roundIndex !== null && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Runda {roundIndex}
+                                    </p>
+                                )}
+                            </div>
                             <div className="flex flex-col items-end gap-1">
                                 <div className={`relative flex items-center gap-2 text-2xl font-extrabold text-amber-500 ${styles.xpCounter}`}>
                                     <i className="fa-solid fa-star" />
