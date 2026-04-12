@@ -912,13 +912,36 @@ async def finalize_round(db: Session, round_id, user_id, xp, topic_id ):
     db.refresh(round_obj)
 
     # call model
-    diff_response = predict_function(
-        DifficultyRequest(
-            accuracy=round_obj.accuracy,
-            avg_time=round_obj.avg_time_secs,
-            hints_used=round_obj.hints,
+    from .algorithm_router import _active_algorithm
+    from .ml_predict import DifficultyResponse
+
+    accuracy_val = float(round_obj.accuracy or 0)
+    avg_time_val = float(round_obj.avg_time_secs or 0)
+    hints_val = int(round_obj.hints or 0)
+
+    if _active_algorithm == "decision_tree":
+        print("\n\ndecision tree\n\n")
+        from ..services.decision_tree_service import predict_decision_tree
+        result = predict_decision_tree(accuracy_val, avg_time_val, hints_val)
+        label = result["next_difficulty"]
+        diff_response = DifficultyResponse(label=label, probabilities={label: result.get("confidence", 1.0)})
+
+    elif _active_algorithm == "ebm":
+        print("\n\nebm\n\n")
+        from ..services.ebm_service import predict_ebm
+        result = predict_ebm(accuracy_val, avg_time_val, hints_val)
+        label = result["next_difficulty"]
+        diff_response = DifficultyResponse(label=label, probabilities={label: result.get("confidence", 1.0)})
+
+    else:
+        print("\n\nlogreg\n\n")
+        diff_response = predict_function(
+            DifficultyRequest(
+                accuracy=accuracy_val,
+                avg_time=avg_time_val,
+                hints_used=hints_val,
+            )
         )
-    )
 
     prev_round = (
         db.query(Round)

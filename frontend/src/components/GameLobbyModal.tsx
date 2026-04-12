@@ -34,7 +34,7 @@ export function GameLobbyModal({ isOpen, onClose, gameId, gameCode, topic, class
         }
 
         // Connect to WebSocket
-        const socket = io(`${process.env.NEXT_PUBLIC_API_URL} || 'http://localhost:8000'`, {
+        const socket = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
             transports: ['polling', 'websocket'],
             withCredentials: true,
             extraHeaders: {
