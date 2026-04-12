@@ -30,6 +30,17 @@ interface Topic {
     name: string;
 }
 
+interface AlgorithmInfo {
+    id: string;
+    name: string;
+    description: string;
+}
+
+interface AlgorithmStatus {
+    active: string;
+    algorithms: AlgorithmInfo[];
+}
+
 export default function TeacherDashboard() {
     const router = useRouter();
     const { user, isAuthenticated, isHydrated, logout } = useAuthStore();
@@ -52,6 +63,38 @@ export default function TeacherDashboard() {
     const [isLoadingStudents, setIsLoadingStudents] = useState(false);
     const [studentsError, setStudentsError] = useState<string | null>(null);
     const [removingStudentId, setRemovingStudentId] = useState<string | null>(null);
+
+    const [algorithmStatus, setAlgorithmStatus] = useState<AlgorithmStatus | null>(null);
+    const [isLoadingAlgorithm, setIsLoadingAlgorithm] = useState(false);
+    const [algorithmError, setAlgorithmError] = useState<string | null>(null);
+    const [isSwitchingAlgorithm, setIsSwitchingAlgorithm] = useState(false);
+
+    // Algorithm helpers
+    const fetchAlgorithmStatus = useCallback(async () => {
+        setIsLoadingAlgorithm(true);
+        setAlgorithmError(null);
+        try {
+            const data = await api.get<AlgorithmStatus>('/algorithm/status');
+            setAlgorithmStatus(data);
+        } catch {
+            setAlgorithmError('Nije moguće učitati status algoritma');
+        } finally {
+            setIsLoadingAlgorithm(false);
+        }
+    }, []);
+
+    const switchAlgorithm = useCallback(async (algorithmId: string) => {
+        setIsSwitchingAlgorithm(true);
+        setAlgorithmError(null);
+        try {
+            const data = await api.post<AlgorithmStatus>('/algorithm/select', { algorithm: algorithmId });
+            setAlgorithmStatus(data);
+        } catch {
+            setAlgorithmError('Nije moguće promijeniti algoritam');
+        } finally {
+            setIsSwitchingAlgorithm(false);
+        }
+    }, []);
 
     // Fetch classrooms
     const fetchClassrooms = useCallback(async () => {
@@ -136,8 +179,9 @@ export default function TeacherDashboard() {
     useEffect(() => {
         if (isHydrated && isAuthenticated && user?.role === 'teacher') {
             fetchClassrooms();
+            fetchAlgorithmStatus();
         }
-    }, [isHydrated, isAuthenticated, user, fetchClassrooms]);
+    }, [isHydrated, isAuthenticated, user, fetchClassrooms, fetchAlgorithmStatus]);
 
     // Load students when classroom selection changes
     useEffect(() => {
@@ -365,6 +409,85 @@ export default function TeacherDashboard() {
                             </div>
                         </div>
                     ) : null}
+
+
+                    {/* Algorithm Selection Card */}
+                    <div className="card p-6 sm:p-8 w-full mt-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <h2 className="text-xl font-bold">Algoritam za predviđanje težine</h2>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+                            Odaberite koji ML algoritam će se koristiti za preporučivanje sljedeće razine težine zadataka.
+                        </p>
+
+                        {algorithmError && (
+                            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <p className="text-red-600 dark:text-red-400 text-sm">{algorithmError}</p>
+                            </div>
+                        )}
+
+                        {isLoadingAlgorithm ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Spinner />
+                            </div>
+                        ) : algorithmStatus ? (
+                            <div className="space-y-3">
+                                {algorithmStatus.algorithms.map((algo) => {
+                                    const isActive = algorithmStatus.active === algo.id;
+                                    const isSwitching = isSwitchingAlgorithm && !isActive;
+                                    return (
+                                        <button
+                                            key={algo.id}
+                                            onClick={() => !isActive && switchAlgorithm(algo.id)}
+                                            disabled={isActive || isSwitchingAlgorithm}
+                                            className={`w-full text-left px-4 py-4 rounded-xl border transition-all
+                                                ${isActive
+                                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                                                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed'
+                                                }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                                                        ${isActive
+                                                            ? 'border-indigo-500 bg-indigo-500'
+                                                            : 'border-gray-300 dark:border-gray-600'
+                                                        }`}>
+                                                        {isActive && (
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-semibold text-sm ${isActive ? 'text-indigo-700 dark:text-indigo-300' : ''}`}>
+                                                            {algo.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                            {algo.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {isActive && (
+                                                    <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium flex-shrink-0 ml-2">
+                                                        Aktivan
+                                                    </span>
+                                                )}
+                                                {isSwitching && (
+                                                    <i className="fa-solid fa-spinner animate-spin text-gray-400 ml-2" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="text-center py-6 text-gray-500 text-sm">
+                                <p>Nije moguće učitati algoritme.</p>
+                                <button onClick={fetchAlgorithmStatus} className="mt-2 text-indigo-500 hover:underline">
+                                    Pokušaj ponovo
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Create Game Button */}

@@ -1,0 +1,56 @@
+{
+  "accuracy": 1.0,
+  "macro_f1": 1.0,
+  "balanced_accuracy": 1.0,
+  "confusion_matrix": [
+    [
+      482,
+      0,
+      0
+    ],
+    [
+      0,
+      483,
+      0
+    ],
+    [
+      0,
+      0,
+      483
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 482.0
+    },
+    "1": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 483.0
+    },
+    "2": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 483.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1448.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1448.0
+    }
+  },
+  "max_depth": 5
+}
