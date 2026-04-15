@@ -412,81 +412,83 @@ export default function TeacherDashboard() {
 
 
                     {/* Algorithm Selection Card */}
-                    <div className="card p-6 sm:p-8 w-full mt-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <h2 className="text-xl font-bold">Algoritam za predviđanje težine</h2>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-                            Odaberite koji ML algoritam će se koristiti za preporučivanje sljedeće razine težine zadataka.
-                        </p>
-
-                        {algorithmError && (
-                            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                <p className="text-red-600 dark:text-red-400 text-sm">{algorithmError}</p>
+                    <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+                        <div className="max-w-2xl mx-auto">
+                            <div className="flex items-center gap-2 mb-4">
+                                <h2 className="text-xl font-bold">Algoritam za predviđanje težine</h2>
                             </div>
-                        )}
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+                                Odaberite koji ML algoritam će se koristiti za preporučivanje sljedeće razine težine zadataka.
+                            </p>
 
-                        {isLoadingAlgorithm ? (
-                            <div className="flex items-center justify-center py-8">
-                                <Spinner />
-                            </div>
-                        ) : algorithmStatus ? (
-                            <div className="space-y-3">
-                                {algorithmStatus.algorithms.map((algo) => {
-                                    const isActive = algorithmStatus.active === algo.id;
-                                    const isSwitching = isSwitchingAlgorithm && !isActive;
-                                    return (
-                                        <button
-                                            key={algo.id}
-                                            onClick={() => !isActive && switchAlgorithm(algo.id)}
-                                            disabled={isActive || isSwitchingAlgorithm}
-                                            className={`w-full text-left px-4 py-4 rounded-xl border transition-all
-                                                ${isActive
-                                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-                                                    : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed'
-                                                }`}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0
-                                                        ${isActive
-                                                            ? 'border-indigo-500 bg-indigo-500'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                        }`}>
-                                                        {isActive && (
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                                                        )}
+                            {algorithmError && (
+                                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                    <p className="text-red-600 dark:text-red-400 text-sm">{algorithmError}</p>
+                                </div>
+                            )}
+
+                            {isLoadingAlgorithm ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <Spinner />
+                                </div>
+                            ) : algorithmStatus ? (
+                                <div className="space-y-3">
+                                    {algorithmStatus.algorithms.map((algo) => {
+                                        const isActive = algorithmStatus.active === algo.id;
+                                        const isSwitching = isSwitchingAlgorithm && !isActive;
+                                        return (
+                                            <button
+                                                key={algo.id}
+                                                onClick={() => !isActive && switchAlgorithm(algo.id)}
+                                                disabled={isActive || isSwitchingAlgorithm}
+                                                className={`w-full text-left px-4 py-4 rounded-xl border transition-all
+                                                    ${isActive
+                                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                                                        : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                                                            ${isActive
+                                                                ? 'border-indigo-500 bg-indigo-500'
+                                                                : 'border-gray-300 dark:border-gray-600'
+                                                            }`}>
+                                                            {isActive && (
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <p className={`font-semibold text-sm ${isActive ? 'text-indigo-700 dark:text-indigo-300' : ''}`}>
+                                                                {algo.name}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                                {algo.description}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className={`font-semibold text-sm ${isActive ? 'text-indigo-700 dark:text-indigo-300' : ''}`}>
-                                                            {algo.name}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                            {algo.description}
-                                                        </p>
-                                                    </div>
+                                                    {isActive && (
+                                                        <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium flex-shrink-0 ml-2">
+                                                            Aktivan
+                                                        </span>
+                                                    )}
+                                                    {isSwitching && (
+                                                        <i className="fa-solid fa-spinner animate-spin text-gray-400 ml-2" />
+                                                    )}
                                                 </div>
-                                                {isActive && (
-                                                    <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium flex-shrink-0 ml-2">
-                                                        Aktivan
-                                                    </span>
-                                                )}
-                                                {isSwitching && (
-                                                    <i className="fa-solid fa-spinner animate-spin text-gray-400 ml-2" />
-                                                )}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <div className="text-center py-6 text-gray-500 text-sm">
-                                <p>Nije moguće učitati algoritme.</p>
-                                <button onClick={fetchAlgorithmStatus} className="mt-2 text-indigo-500 hover:underline">
-                                    Pokušaj ponovo
-                                </button>
-                            </div>
-                        )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 text-gray-500 text-sm">
+                                    <p>Nije moguće učitati algoritme.</p>
+                                    <button onClick={fetchAlgorithmStatus} className="mt-2 text-indigo-500 hover:underline">
+                                        Pokušaj ponovo
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

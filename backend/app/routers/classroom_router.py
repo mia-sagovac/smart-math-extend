@@ -347,9 +347,9 @@ def get_students_in_classroom_by_id(
             "username": user.username,
             "level": int(user.current_difficulty),
             "xp": int(stats.xp) if stats and stats.xp is not None else 0,
-            "difficulty_do_sto": int(user.difficulty_do_sto),
-            "difficulty_zbrajanje": int(user.difficulty_zbrajanje),
-            "difficulty_mnozenje": int(user.difficulty_mnozenje),
+            "difficulty_do_sto": int(user.difficulty_do_sto if user.difficulty_do_sto is not None else 3),
+            "difficulty_zbrajanje": int(user.difficulty_zbrajanje if user.difficulty_zbrajanje is not None else 3),
+            "difficulty_mnozenje": int(user.difficulty_mnozenje if user.difficulty_mnozenje is not None else 3),
         }
         for user, stats in students
     ]
