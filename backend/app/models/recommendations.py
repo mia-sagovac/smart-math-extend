@@ -1,8 +1,14 @@
-from sqlalchemy import Column, Text, Numeric, ForeignKey, CheckConstraint, TIMESTAMP, SmallInteger, Integer
+from sqlalchemy import Column, Text, Numeric, ForeignKey, CheckConstraint, TIMESTAMP, SmallInteger, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from ..db import Base
 from sqlalchemy.sql import func
+import enum
+
+class AlgorithmType(enum.Enum):
+    logistic = "logistic"
+    decision_tree = "decision_tree"
+    ebm = "ebm"
 
 class Recommendation(Base):
     __tablename__ = "recommendations"
@@ -17,6 +23,7 @@ class Recommendation(Base):
     round_index = Column(Integer)
     true_label = Column(Integer)
     labeled_at = Column(TIMESTAMP(timezone=True))
+    algorithm = Column(Enum(AlgorithmType), nullable=True)
 
     __table_args__ = (
         CheckConstraint("rec IN ('up','same','down')", name="rec_check"),

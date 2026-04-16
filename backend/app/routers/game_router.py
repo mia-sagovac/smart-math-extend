@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models.game import Game
+from ..models.game import Game, AlgorithmType
 from ..models.users import User
 from ..routers.auth import get_current_user
 
@@ -29,12 +29,14 @@ def create_multiplayer_game(
     db: db_dependency, current_user: User = Depends(get_current_user)
 ):
     # game_code is UNIQUE and the space is small (ABCD^4 = 256), so collisions are expected.
+    from ..routers.algorithm_router import _active_algorithm
     for _ in range(30):
         game = Game(
             game_code=generateGameCode(),
             teacher_id=current_user.id,
             status="lobby",
             created_at=datetime.datetime.utcnow(),
+            algorithm=AlgorithmType(_active_algorithm),
         )
 
         try:

@@ -26,6 +26,7 @@ from ..models.topics import Topic
 from .ml_feedback import FeedbackRequest, derive_true_label, feedback_function
 from .ml_predict import DifficultyRequest, predict_function
 from .socket_auth import authenticate_socket_with_token
+from ..models.recommendations import AlgorithmType
 
 questions = {}
 
@@ -1058,6 +1059,7 @@ async def finalize_round(db: Session, round_id, user_id, xp, topic_id ):
         prev_difficulty=topic_difficulty,
         new_difficulty=new_diff,
         round_index=round_obj.round_index,
+        algorithm=AlgorithmType(_active_algorithm),
     )
     db.add(recommendation)
 
