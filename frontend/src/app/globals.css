@@ -163,3 +163,90 @@ body {
 .emoji-slot-filled {
     animation: pop 0.2s ease-out;
 }
+
+@media (max-height: 760px) {
+  .card {
+    max-height: calc(100vh - 1rem);
+    overflow-y: auto;
+    padding: 5px 10px 0px 10px;
+  }
+
+  .card input,
+  .card button,
+  .card p,
+  .card span,
+  .card label {
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .card .btn {
+    padding: 0.75rem 0.95rem;
+  }
+
+  .card .num-key {
+    font-size: 1.05rem;
+    padding: 0.75rem 0;
+  }
+}
+
+@media (max-height: 650px) {
+    .min-h-screen {
+        padding: 10px;
+    }
+
+    .text-purple-600 {
+        font-size: 0.95rem;
+    }
+    
+    .card {
+        height: auto;
+    }
+
+    .card button{
+        height: 40px;
+        font-size: 0.95rem;
+    }
+
+    .card input{
+        height: 30px;
+    }
+
+    .card .btn {
+        padding: 0.65rem 0.85rem;
+    }
+
+    .card p{
+        font-size: 0.7rem;
+    }
+
+    .card span{
+        font-size: 0.7rem;
+    }
+
+    .relative.w-14.h-7.rounded-full.transition-all.duration-300 {
+        width: 30px !important;
+        height: 16px !important;
+    }
+
+    .relative.w-14.h-7.rounded-full.transition-all.duration-300 > span {
+        width: 12px !important;
+        height: 12px !important;
+        top: 1px !important;
+    }
+
+    .relative.w-14.h-7.rounded-full.transition-all.duration-300 > span.left-8 {
+        left: 16px !important;
+    }
+
+    .pt-6{
+        margin: 0;
+    }
+
+    .card .num-key {
+        font-size: 1rem;
+        padding: 0.65rem 0;
+    }
+}
