@@ -831,6 +831,7 @@ export default function StudentGamePage() {
         const socket = getAuthedSocket(token);
 
         setIsLoadingNextBatch(true);
+        console.log('Requesting next batch with feedback:', value);
         // Backend expects for `fetch_new_batch`:
         // - room_id: gameId (string)
         // - selectedTopic: { topic_id }

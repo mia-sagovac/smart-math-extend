@@ -19,6 +19,7 @@ from ..models.num_answer import NumAnswer
 from ..models.questions import Question
 from ..models.recommendations import Recommendation
 from ..models.rounds import Round
+from ..models.feedback import Feedback
 from ..models.student_stats import StudentStats
 from ..models.teacher_actions import TeacherAction
 from ..models.users import User
@@ -821,6 +822,7 @@ async def fetch_new_batch(sid, data):
         game_id = session.get("game_id")
         topic_id = data["selectedTopic"]["topic_id"]
         room_id = data["room_id"]
+        feedback = data["feedback"]
 
         student = db.query(User).filter((User.id == user_id)).first()
         if not student:
@@ -839,6 +841,7 @@ async def fetch_new_batch(sid, data):
             elif topic.name == "Zbrajanje i oduzimanje":
                 user_questions = generate_questions(db, topic_id, topic_difficulty, user_id=user_id, game_id=game_id)
         
+        
 
         last_round = (
             db.query(Round)
@@ -847,6 +850,17 @@ async def fetch_new_batch(sid, data):
             .first()
         )
         next_index = 0 if last_round is None else last_round.round_index + 1
+
+        # Persist any round feedback sent by the client for the previous round.
+        if feedback is not None and str(feedback).strip() and last_round is not None:
+            db.add(
+                Feedback(
+                    game_id=game_id,
+                    user_id=user_id,
+                    round_id=last_round.id,
+                    feedback=str(feedback).strip(),
+                )
+            )
 
         # Create round
         round_obj = Round(
