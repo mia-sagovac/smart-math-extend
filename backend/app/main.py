@@ -20,7 +20,7 @@ sio = socketio.AsyncServer(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://smart-math-phi.vercel.app",
-        "https://smart-math-extend.vercel.app/"
+        "https://smart-math-extend.vercel.app"
     ],
 )
 
@@ -32,7 +32,7 @@ fastapi_app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://smart-math-phi.vercel.app",
-        "https://smart-math-extend.vercel.app/"
+        "https://smart-math-extend.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
