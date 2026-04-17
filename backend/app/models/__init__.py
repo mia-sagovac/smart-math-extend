@@ -8,5 +8,6 @@ from .num_answer import NumAnswer
 from .attempts import Attempt
 from .rounds import Round
 from .recommendations import Recommendation
+from .feedback import Feedback
 from .teacher_actions import TeacherAction
 from .student_stats import StudentStats
