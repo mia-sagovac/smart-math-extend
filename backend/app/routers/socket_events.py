@@ -23,7 +23,6 @@ from ..models.student_stats import StudentStats
 from ..models.teacher_actions import TeacherAction
 from ..models.users import User
 from ..models.topics import Topic
-from ..models.feedback import Feedback
 from .ml_feedback import FeedbackRequest, derive_true_label, feedback_function
 from .ml_predict import DifficultyRequest, predict_function
 from .socket_auth import authenticate_socket_with_token
@@ -847,36 +846,6 @@ async def fetch_new_batch(sid, data):
             .order_by(Round.round_index.desc())
             .first()
         )
-
-        if last_round:
-            raw_feedback = data.get("feedback")
-            if raw_feedback is not None:
-                normalized_feedback = {
-                    "hard": "bad",
-                    "ok": "good",
-                    "easy": "great",
-                    "bad": "bad",
-                    "good": "good",
-                    "great": "great",
-                }.get(str(raw_feedback).strip().lower())
-                if normalized_feedback:
-                    existing_feedback = (
-                        db.query(Feedback)
-                        .filter(Feedback.round_id == last_round.id)
-                        .one_or_none()
-                    )
-                    if existing_feedback is None:
-                        feedback_obj = Feedback(
-                            round_id=last_round.id,
-                            user_id=user_id,
-                            game_id=game_id,
-                            feedback=normalized_feedback,
-                        )
-                        db.add(feedback_obj)
-                    else:
-                        existing_feedback.feedback = normalized_feedback
-                        db.add(existing_feedback)
-
         next_index = 0 if last_round is None else last_round.round_index + 1
 
         # Create round
