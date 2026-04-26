@@ -213,7 +213,7 @@ export function JoinGameModal({ isOpen, onClose, onJoined, onLeft, existingGameC
 
                 <h2 className="text-xl font-bold mb-2">Pridruži se igri</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    {isClosed ? 'Igra je završena' : isJoined ? 'Pridružen/a igri' : 'Unesi kod igre (4 emojia)'}
+                    {isClosed ? 'Igra je završena' : isJoined ? 'Pridružen/a igri' : 'Unesi kod igre (3 emojia)'}
                 </p>
 
                 {error && (

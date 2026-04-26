@@ -227,6 +227,10 @@ export default function TeacherDashboard() {
 
                         <span className="font-medium">{user.username}</span>
                     </div>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLScRujoPbM3WdlmUnvagMZdl_zUKjsq1NzNqZUtHzIEwwvtSEA/viewform" target="_blank" rel="noopener noreferrer" className="btn btn-outline flex items-center gap-2 !py-2 !px-4">
+                        <i className="fa-solid fa-clipboard-list text-lg text-indigo-400" />
+                        <span>Anketa</span>
+                    </a>
                     <button
                         onClick={handleLogout}
                         className="btn btn-outline flex items-center gap-2 !py-2 !px-4"

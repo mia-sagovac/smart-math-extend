@@ -58,6 +58,10 @@ export default function StudentDashboard() {
                         <i className="fa-solid fa-user-circle text-xl text-sky-500 mr-2" />
                         <span className="font-medium">{user.username}</span>
                     </div>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdqu_E1XEMSSxCGB6DdaShjCs2XSxdouXagCLNTKHGP8P8Ksg/viewform" target="_blank" rel="noopener noreferrer" className="btn btn-outline flex items-center gap-2 !py-2 !px-4">
+                        <i className="fa-solid fa-clipboard-list text-lg text-indigo-400" />
+                        <span>Klikni me</span>
+                    </a>
                     <button
                         onClick={handleLogout}
                         className="btn btn-outline flex items-center gap-2 !py-2 !px-4"

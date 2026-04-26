@@ -67,6 +67,7 @@ export default function StudentGamePage() {
     const [showWrongOverlay, setShowWrongOverlay] = useState(false);
     const roundXpEarnedRef = useRef<number>(0);
     const [showRoundSummary, setShowRoundSummary] = useState(false);
+    const [lastWrongAnswer, setLastWrongAnswer] = useState<string | null>(null);
     const roundAggRef = useRef<{
         answered: number;
         correct: number;
@@ -318,6 +319,7 @@ export default function StudentGamePage() {
         if (!currentQuestion) return;
         setHasSubmitted(false);
         setAnswer('');
+        setLastWrongAnswer(null);
         setFeedback(null);
         setAttemptsThisQuestion(0);
         setHintClicksThisQuestion(0);
@@ -495,7 +497,8 @@ export default function StudentGamePage() {
         if (!currentQuestion || currentQuestion.type !== 'num') return null;
         const expectedRaw = currentQuestion.answer?.correct_answer;
         const expected = Number(expectedRaw);
-        const entered = Number(answer);
+        const enteredRaw = answer !== '' ? answer : (lastWrongAnswer ?? '');
+        const entered = Number(enteredRaw);
         if (!Number.isFinite(expected) || !Number.isFinite(entered)) return 'Upiši broj kako bi dobio/la hint.';
 
         // Parse the question to extract operation and numbers
@@ -750,6 +753,8 @@ export default function StudentGamePage() {
             const nextWrongAttempts = wrongAttemptsSinceSwap + 1;
             setWrongAttemptsSinceSwap(nextWrongAttempts);
             setLastAttemptWasWrong(true);
+            setLastWrongAnswer(answer);
+            setAnswer('');
 
             if (nextWrongAttempts >= questionSwapThreshold && remainingQuestionIndices.length > 1) {
                 const nextIndex = getNextRandomQuestionIndex(currentQuestionIndex, remainingQuestionIndices);
@@ -996,6 +1001,12 @@ export default function StudentGamePage() {
                                 className="w-full px-4 py-3 rounded-xl border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 outline-none cursor-default"
                                 placeholder="Unesi broj klikom na tipkovnicu ispod…"
                             />
+
+                            {lastWrongAnswer !== null && (
+                                <p className="text-base text-gray-400 dark:text-gray-500 mt-1.5 pl-1">
+                                    Prijašnji odgovor: <span className="font-medium">{lastWrongAnswer}</span>
+                                </p>
+                            )}
 
                             {currentQuestion.type === 'num' && (
                                 <div className="numeric-keyboard mt-4">
