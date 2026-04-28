@@ -52,7 +52,7 @@ export default function StudentGamePage() {
     const [lastSaveStatus, setLastSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [roundFeedback, setRoundFeedback] = useState<'hard' | 'ok' | 'easy' | null>(null);
     const [isLoadingNextBatch, setIsLoadingNextBatch] = useState(false);
-    const [batchNumber, setBatchNumber] = useState<number>(0); // 1..3
+    const [batchNumber, setBatchNumber] = useState<number>(0); // 1..4
     const [roundIndex, setRoundIndex] = useState<number | null>(null);
     const [xp, setXp] = useState<number>(0);
     const [roundFirstTryCorrect, setRoundFirstTryCorrect] = useState<number>(0);
@@ -829,7 +829,7 @@ export default function StudentGamePage() {
     };
 
     const handleRoundFeedback = (value: 'hard' | 'ok' | 'easy') => {
-        if (batchNumber >= 3) return;
+        if (batchNumber >= 4) return;
         setRoundFeedback(value);
         const token = localStorage.getItem('auth_token');
         if (!token || !payload) return;
@@ -847,7 +847,7 @@ export default function StudentGamePage() {
         });
     };
 
-    // After 3 sets, we end the game
+    // After 4 sets, we end the game
 
     if (!isHydrated || !isAuthenticated || !user || user.role !== 'student') {
         return (
@@ -876,11 +876,11 @@ export default function StudentGamePage() {
                     <div className="flex flex-col items-center justify-center py-10 gap-3">
                         {isRoundComplete ? (
                             <div className="w-full max-w-md text-center">
-                                {batchNumber >= 3 ? (
+                                {batchNumber >= 4 ? (
                                     <>
                                         <h2 className="text-lg font-bold mb-2">Igra je završena</h2>
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                                            Odigrao/la si 3 setova pitanja. Bravo!
+                                            Odigrao/la si 4 setova pitanja. Bravo!
                                         </p>
                                         <button onClick={handleLeaveGame} className="btn btn-primary w-full py-3">
                                             U redu
