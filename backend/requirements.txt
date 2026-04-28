@@ -15,7 +15,7 @@ pandas
 joblib
 scikit-learn
 
-
+interpret.glassbox
 python-socketio[asyncio]
 python-engineio[asyncio]
 
