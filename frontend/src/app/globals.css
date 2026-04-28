@@ -39,9 +39,7 @@ body {
 }
 
 /* Custom button styles */
-.btn {
-    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95;
-}
+
 
 .btn-primary {
     background: var(--primary);
