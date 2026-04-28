@@ -4,9 +4,9 @@ from .config import settings
 
 engine = create_engine(
     settings.DATABASE_URL,
-    pool_size=20,
-    max_overflow=30,
-    pool_timeout=30
+    pool_size=30,
+    max_overflow=40,
+    pool_timeout=40
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
