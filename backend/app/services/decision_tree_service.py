@@ -31,6 +31,8 @@ def predict_decision_tree(accuracy: float, avg_time: float, hints_used: int) -> 
     }])[FEATURES]
 
     prediction = int(model.predict(X)[0])
+    proba = model.predict_proba(X)[0]
+    confidence = float(proba[prediction])
     explanation = _walk_tree(model, X)
 
     label_map = {0: "smanjiti težinu", 1: "zadržati isti level", 2: "povećati težinu"}
@@ -39,6 +41,7 @@ def predict_decision_tree(accuracy: float, avg_time: float, hints_used: int) -> 
         "next_difficulty": prediction,
         "label_text": label_map.get(prediction, str(prediction)),
         "reason": explanation,
+        "confidence": round(confidence, 3),
         "algorithm": "decision_tree",
     }
 
