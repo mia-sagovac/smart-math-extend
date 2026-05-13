@@ -65,6 +65,7 @@ export default function StudentGamePage() {
     const roundIndexByRoundIdRef = useRef<Record<string, number>>({});
     const roundFirstTryCorrectRef = useRef<number>(0);
     const [showWrongOverlay, setShowWrongOverlay] = useState(false);
+    const [showCorrectOverlay, setShowCorrectOverlay] = useState(false);
     const roundXpEarnedRef = useRef<number>(0);
     const [showRoundSummary, setShowRoundSummary] = useState(false);
     const [lastWrongAnswer, setLastWrongAnswer] = useState<string | null>(null);
@@ -748,6 +749,8 @@ export default function StudentGamePage() {
         }
         if (isCorrect) {
             setLastAttemptWasWrong(false);
+            setShowCorrectOverlay(true);
+            setTimeout(() => setShowCorrectOverlay(false), 600);
             await finalizeQuestion(nextAttempts, source);
         } else {
             const nextWrongAttempts = wrongAttemptsSinceSwap + 1;
@@ -1154,7 +1157,16 @@ export default function StudentGamePage() {
             {showWrongOverlay && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
                     <i
-                        className="fa-solid fa-xmark text-red-600 text-[250px] font-black animate-wrongX"
+                        className="fa-solid fa-circle-xmark text-red-600 text-[250px] font-black animate-scaleIn"
+                        style={{ transform: 'translateY(-150px)' }}
+                    />
+                </div>
+            )}
+
+            {showCorrectOverlay && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+                    <i
+                        className="fa-solid fa-circle-check text-emerald-500 text-[250px] font-black animate-scaleIn"
                         style={{ transform: 'translateY(-150px)' }}
                     />
                 </div>
