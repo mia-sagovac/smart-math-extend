@@ -43,9 +43,7 @@ def main(args):
     model = ExplainableBoostingClassifier(
         random_state=args.seed,
         n_jobs=1,
-        interactions=5,
-        max_rounds=10000,
-        learning_rate=0.005,
+        interactions=3,
     )
     model.fit(X_train, y_train)
 
